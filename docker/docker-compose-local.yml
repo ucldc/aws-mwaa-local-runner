@@ -26,7 +26,7 @@ services:
                 max-size: 10m
                 max-file: "3"
         volumes:
-            - "${DAGS_HOME}:/usr/local/airflow/dags"
+            - "${DAGS_HOME}:/usr/local/airflow/dags/rikolti"
             - "${PLUGINS_HOME}:/usr/local/airflow/plugins"
             - "${REQS_HOME}:/usr/local/airflow/requirements"
             - "${STARTUP_HOME}:/usr/local/airflow/startup"
