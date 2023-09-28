@@ -31,6 +31,7 @@ services:
             - "${REQS_HOME}:/usr/local/airflow/requirements"
             - "${STARTUP_HOME}:/usr/local/airflow/startup"
             - "${RIKOLTI_DATA_HOME}:/usr/local/airflow/rikolti_data"
+            - "${DOCKER_SOCKET}:/var/run/docker.sock"
         ports:
             - "8080:8080"
         command: local-runner
