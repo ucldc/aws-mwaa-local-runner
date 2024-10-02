@@ -2,6 +2,65 @@
 Starting from Airflow version 2.9, MWAA has open-sourced the original Docker image used in our production deployments. You can refer to our open-source image repository at https://github.com/aws/amazon-mwaa-docker-images to create a local environment identical to that of MWAA.
 You can also continue to use the MWAA Local Runner for testing and packaging requirements for all Airflow versions supported on MWAA.
 
+# About the PAD fork of aws-mwaa-local-runner
+
+We have forked this repository and made some changes to enable us to use aws-mwaa-local-runner while keeping our dags stored in other repositories. (See this slack thread for more info: https://apache-airflow.slack.com/archives/CCRR5EBA7/p1690405849653759)
+
+Check out the [prerequisites](#prerequisites) from the [aws portion of this documentation](#about-aws-mwaa-local-runner).
+
+This PAD-specific documentation picks up at cloning the repo in [Getting Started](#get-started), before [Step one: Building the Docker Image](#step-one-building-the-docker-image)
+
+## PAD Setup Getting Started
+
+```bash
+git clone git@github.com:ucldc/aws-mwaa-local-runner.git
+cd aws-mwaa-local-runner
+cp docker/.env.example docker/.env
+```
+
+### DockerOperator Environment Variable
+If you'll be running a DockerOperator, you'll want to check that the `DOCKER_SOCKET` is set correctly in `docker/.env`. The docker socket will typically be at `/var/run/docker.sock`.
+
+> On Mac OS Docker Desktop you can check that the socket is available and at this location by opening Docker Desktop's settings, looking under "Advanced", and checking the "Allow the Docker socket to be used" setting.
+
+### Local Storage Environment Variable
+If your airflow tasks read or write from the host machine in development, you'll want to check that `MWAA_LOCAL_STORAGE` is set to the location on your host machine that you want to read or write data from. The path defined as `MWAA_LOCAL_STORAGE` is mounted to `/usr/local/airflow/local_storage` on the container, so you can configure your DAG code to read from or write to that location.
+
+> In Rikolti's case, we read and write files to s3, but during local development, we read and write to our development environments. My `MWAA_LOCAL_STORAGE` environment variable is set to a path on my local machine (`~/Projects/rikolti_data`), and Rikolti's `RIKOLTI_DATA` environment variable is set to `file:///usr/local/airflow/local_storage`. In deployment, Rikolti's `RIKOLTI_DATA` is set to `s3://bucket-name/prefix`. 
+
+Once your environment is configured, you can move on to [Step one - Building the Docker image](#step-one-building-the-docker-image).
+
+## PAD DAGS
+Instead of adding DAGS as described in [Step four - Adding DAGs and supporting files](#step-four-add-dags-and-supporting-files), add your DAGs by specifying the directory or repository containing your DAGs in the `DAGS` environment variable in `docker/.env`. The contents of this directory will be mounted at `/usr/local/airflow/dags/$DAGS_NAMESPACE`. Typically, you'll want `$DAGS_NAMESPACE` to be the same as the name of the directory:
+
+```
+DAGS=~/Projects/rikolti
+DAGS_NAMESPACE=rikolti
+```
+
+> Because the contents of the Rikolti folder on the host machine are mounted, we need to specify the name `rikolti` to mount them into on the container. We could mount the contents of the entire ~/Projects directory in the example above into `/usr/local/airflow/dags/` - this would retain the `rikolti` folder name. Due to the way Airflow evaluates every file in it's dags directory, though, this would lead to very poor performance at best and prevent Airflow from even starting up at worst. 
+
+### Add DAG Requirements
+If your workflow has any python requirements, copy the file to the `aws-mwaa-local-runner/requirements/` directory and make sure the file is listed in `requirements/requirements.txt`, for example:
+
+```bash
+cp ~/Projects/rikolti/requirements.txt requirements/rikolti_requirements.txt
+echo -r ./rikolti_requirements.txt >> requirements/requirements.txt
+```
+
+You'll need to keep this file up-to-date as you add new requirements to your DAGs. 
+
+Refer to [Requirements.txt](#requirementstxt) for some utilities this repository offers for requirements.
+
+
+### Setup DAG environment variables, system library dependencies
+Refer to [Startup script](#startup-script)
+
+
+### Add plugins
+Refer to [Custom plugins](#custom-plugins)
+
+
 # About aws-mwaa-local-runner
 
 This repository provides a command line interface (CLI) utility that replicates an Amazon Managed Workflows for Apache Airflow (MWAA) environment locally.
