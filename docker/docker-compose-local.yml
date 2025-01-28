@@ -26,11 +26,11 @@ services:
         max-size: 10m
         max-file: "3"
     volumes:
-      - "${DAGS_HOME}:/usr/local/airflow/dags/rikolti"
-      - "${PLUGINS_HOME}:/usr/local/airflow/plugins"
-      - "${REQS_HOME}:/usr/local/airflow/requirements"
-      - "${STARTUP_HOME}:/usr/local/airflow/startup"
-      - "${RIKOLTI_DATA_HOME}:/usr/local/airflow/rikolti_data"
+      - "${DAGS}:/usr/local/airflow/dags/${DAGS_NAMESPACE}"
+      - "${PWD}/plugins:/usr/local/airflow/plugins"
+      - "${PWD}/requirements:/usr/local/airflow/requirements"
+      - "${PWD}/startup_script:/usr/local/airflow/startup"
+      - "${MWAA_LOCAL_STORAGE}:/usr/local/airflow/local_storage"
       - "${DOCKER_SOCKET}:/var/run/docker.sock"
     ports:
       - "8080:8080"
